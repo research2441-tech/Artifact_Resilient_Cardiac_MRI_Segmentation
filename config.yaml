@@ -1,0 +1,85 @@
+seed: 42
+
+data:
+  manifest: manifest.csv
+  image_size: 224
+  slice_axis: 2
+  target_spacing: null        # Example: [1.25, 1.25, 8.0]; null preserves native spacing.
+  num_classes: 4
+  class_names: [background, LV, RV, myocardium]
+  label_map:
+    0: 0
+    1: 1
+    2: 2
+    3: 3
+  cache_volumes: 8
+  min_foreground_pixels: 0   # Keep all slices by default. Raise only with justification.
+
+model:
+  in_channels: 1
+  num_classes: 4
+  backbone: efficientformerv2_s0.snap_dist_in1k
+  use_efficientformerv2: true
+  pretrained: true
+  use_channel_attention: true
+  use_multiscale_fusion: true
+  decoder_dropout: 0.10
+  baseline_channels: [32, 64, 128, 256]
+  transformer_heads: 8
+  transformer_layers: 2
+
+augmentation:
+  enabled: true
+  rotate_limit_deg: 10
+  shift_limit: 0.05
+  scale_limit: 0.10
+  affine_p: 0.50
+  elastic_alpha: 1.0
+  elastic_sigma: 50.0
+  elastic_p: 0.25
+  gaussian_noise_var: [5.0, 25.0]
+  noise_p: 0.25
+  gamma_limit: [85, 115]
+  gamma_p: 0.25
+  brightness_limit: 0.10
+  contrast_limit: 0.10
+  brightness_contrast_p: 0.25
+  horizontal_flip_p: 0.0
+  vertical_flip_p: 0.0
+
+training:
+  epochs: 200
+  batch_size: 16
+  num_workers: 4
+  optimizer: SGD
+  learning_rate: 0.1
+  momentum: 0.9
+  weight_decay: 0.0001
+  nesterov: true
+  scheduler: cosine
+  warmup_epochs: 5
+  early_stopping_patience: 20
+  amp: true
+  grad_clip_norm: 5.0
+  dice_weight: 0.5
+  ce_weight: 0.5
+  include_background_in_dice: false
+  checkpoint_metric: dsc_macro
+
+evaluation:
+  split: test
+  batch_size: 16
+  num_workers: 4
+  hd95_spacing: null
+  bootstrap_samples: 2000
+  confidence_level: 0.95
+  save_qualitative_cases: 4
+
+benchmark:
+  warmup_iterations: 30
+  timed_iterations: 100
+
+ablation:
+  run_cumulative: true
+  run_leave_one_out: true
+  test_split: test
